@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+
+.cache/
+huggingface/
+models/
+checkpoints/
+
+backend/.cache/
+backend/huggingface/
+backend/models/
+backend/checkpoints/
+
+.env
