@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16-alpine3.19
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./postgresql_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - .env
+    user: ${POSTGRES_USER}
+    container_name: db
+    networks:
+      - app_db_network
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - '5432:5432'
+    healthcheck:
+      # this command checks if the database is ready, right on the source db server
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: always
+    ports:
+      - '6333:6333'
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - app_db_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]  
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    depends_on:
+      - qdrant
+      - postgres
+    image: fastapi_app
+    volumes:
+      - ./backend:/backend
+      - ./data:/backend/data 
+    env_file:
+      - .env
+    networks:
+      - app_db_network
+    ports:
+      - '127.0.0.1:8000:8000'
+    build:
+      context: .
+      dockerfile: fastapi.Dockerfile
+    pull_policy: build
+    #entrypoint: sh -c "./start.sh"
+
+
+networks:
+  app_db_network:
+    name: app_db_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.16.0.0/16
+
+volumes:
+  db_data:
+  qdrant_data:

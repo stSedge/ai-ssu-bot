@@ -1,0 +1,25 @@
+CREATE SCHEMA IF NOT EXISTS SSU_BOT;
+
+SET search_path TO SSU_BOT;
+
+CREATE TABLE IF NOT EXISTS session_tab (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS messages_tab (
+    id BIGSERIAL PRIMARY KEY,
+    session_id UUID NOT NULL REFERENCES session_tab(id) ON DELETE CASCADE,
+    content VARCHAR(2000) NOT NULL,
+    answer VARCHAR(3000) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS faq_tab (
+    id SERIAL PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL
+);
+
